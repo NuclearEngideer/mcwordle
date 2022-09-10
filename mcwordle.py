@@ -1,10 +1,15 @@
 from time import time
 import random
+import json
 
 guess = []
 answer='piton'
 
-allowedWords=['crate','atoms','adieu','piton', 'moose', 'train', 'noble','crazy']
+solutionjson=open('data.json')
+fiveletterwords=json.load(solutionjson)
+
+solutions=fiveletterwords['solutions']
+allowedWords=fiveletterwords['valid_words']
 
 letters={'1': ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
          '2': ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
@@ -23,11 +28,9 @@ def checkWord(guess, answer):
       g = answer.index(guess[i])
     # Remove letters from the guess set if they're not in the word at all
     else:
-      letters['1'].pop(letters['1'].index(guess[i]))
-      letters['2'].pop(letters['2'].index(guess[i]))
-      letters['3'].pop(letters['3'].index(guess[i]))
-      letters['4'].pop(letters['4'].index(guess[i]))
-      letters['5'].pop(letters['5'].index(guess[i]))
+      for j in range(1,6):
+        if guess[i] in letters[str(j)]:
+          letters[str(j)].pop(letters[str(j)].index(guess[i]))
     # Figure out if any letters are in the proper position, or are in the word and in the wrong place
     indeces=getIndexes(guess[i], answer)
     # First set yellows:
@@ -61,8 +64,11 @@ while result != [2,2,2,2,2]:
   for i in range(1,6):
     if result[i-1] == 1 or result[i-1] == 0:
       guess[i-1] = rollLetter(letters[str(i)])
-  result = checkWord(guess,answer)
-  print(result)
+    print(guess)
+  if guess in allowedWords or guess in solutions:
+    result = checkWord(guess,answer)
+    print(result)
+    guesscount+=1
   
-print('wait')
+print(guesscount)
 # def cleanLetters(guess[i])

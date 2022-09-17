@@ -8,12 +8,18 @@ from colorama import Back, Style
 num_guesses=np.array([])
 wins=np.array([])
 iterations=10
+day=455
 
 words=open('data.json')
 fiveletterwords=json.load(words)
 solutions=fiveletterwords['solutions']
 allowedWords=fiveletterwords['valid_words']
 words.close()
+
+suppressResults=True
+green='\U0001F7E9'
+yellow='\U0001F7E8'
+black='\U00002B1B'
 
 def checkWord(guess, answer, letters):
   res=[0,0,0,0,0]
@@ -73,14 +79,24 @@ def newWordAllowed(guess, result, letters, answer, yellow_letters):
 
 def printRes(guess, result):
   # let's color the letters!
-  for i in range(0,5):
-    if result[i]==1:
-      print(Back.YELLOW + guess[i], end='')
-    elif result[i]==2:
-      print(Back.GREEN + guess[i], end='')
-    else:
-      print(Back.BLACK + guess[i], end='')
-  print(Style.RESET_ALL)
+  if not suppressResults:
+    for i in range(0,5):
+      if result[i]==1:
+        print(Back.YELLOW + guess[i], end='')
+      elif result[i]==2:
+        print(Back.GREEN + guess[i], end='')
+      else:
+        print(Back.BLACK + guess[i], end='')
+    print(Style.RESET_ALL)
+  else:
+    for i in range(0,5):
+      if result[i]==1:
+        print(yellow, end='')
+      elif result[i]==2:
+        print(green, end='')
+      else:
+        print(black, end='')
+    print(Style.RESET_ALL)
 
 def mainLoop(seed, answer):
   guess=seed
@@ -110,13 +126,13 @@ starttime=time()
 for i in range(0, iterations):
   # guesscount, win = mainLoop(list(initial), solutions[454])
   # num_guesses=np.append(guesscount) for ans in solutions[449]
-   num_guesses=np.append(num_guesses, mainLoop(list('dealt'), solutions[454]))
+   num_guesses=np.append(num_guesses, mainLoop(list('dealt'), solutions[day]))
 total_time=time()-starttime
 
 winpct=100*len(num_guesses.nonzero()[0])/iterations
 
 print(f'\n----STATISTICS----\n',
-      f'Ran {iterations} independent trials.\n',
+      f'Ran {iterations} independent trials for Wordle {day}.\n',
       'Win Percentage: {:4.2f}%\n'.format(winpct),
       # f'Worked through {len(solutions)} wordle solutions\n',
        'Process took {:4.2f} seconds\n'.format(total_time),

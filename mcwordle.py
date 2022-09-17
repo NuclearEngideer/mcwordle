@@ -1,15 +1,19 @@
 from time import time
 import random
 import json
+from tkinter import mainloop
 import numpy as np
 from colorama import Back, Style
 
 num_guesses=np.array([])
+wins=np.array([])
+iterations=10
 
 words=open('data.json')
 fiveletterwords=json.load(words)
 solutions=fiveletterwords['solutions']
 allowedWords=fiveletterwords['valid_words']
+words.close()
 
 def checkWord(guess, answer, letters):
   res=[0,0,0,0,0]
@@ -57,6 +61,16 @@ def newWord(guess, result, letters):
       guess[i-1] = rollLetter(letters[str(i)])
   return guess
 
+def newWordAllowed(guess, result, letters, answer, yellow_letters):
+  guess=newWord(guess, result, letters)
+  while ''.join(guess) not in allowedWords and ''.join(guess) not in solutions:
+    guess=newWord(guess, result, letters)
+    while len(set(yellow_letters)-set(guess)) > 0:
+      guess=newWord(guess,result,letters)
+  result = checkWord(guess, answer, letters)
+  yellow_letters=popYellows(guess, result, yellow_letters, letters)
+  return result
+
 def printRes(guess, result):
   # let's color the letters!
   for i in range(0,5):
@@ -68,7 +82,7 @@ def printRes(guess, result):
       print(Back.BLACK + guess[i], end='')
   print(Style.RESET_ALL)
 
-def main(seed, answer):
+def mainLoop(seed, answer):
   guess=seed
   letters={'1': ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
            '2': ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'],
@@ -80,24 +94,33 @@ def main(seed, answer):
   result=checkWord(guess, answer, letters)
   printRes(guess, result)
   yellow_letters=popYellows(guess, result, yellow_letters, letters)
-  while result != [2,2,2,2,2]:
-    guess=newWord(guess, result, letters)
-    while ''.join(guess) not in allowedWords and ''.join(guess) not in solutions:
-      guess=newWord(guess, result, letters)
-      while len(set(yellow_letters)-set(guess)) > 0:
-        guess=newWord(guess,result,letters)
-    result = checkWord(guess, answer, letters)
-    yellow_letters=popYellows(guess, result,yellow_letters,letters)
+  while guesscount<6 and result != [2,2,2,2,2]:
+    result=newWordAllowed(guess, result, letters, answer, yellow_letters)
     printRes(guess, result)
     guesscount+=1
-  print(str(guesscount)+'/6')
+  if guesscount==6 and result != [2,2,2,2,2]:
+    print('X/6')
+    guesscount=0
+  else:
+    print(str(guesscount)+'/6')
   return guesscount
 
-for ans in solutions[0:99]:
-  num_guesses=np.append(num_guesses, main(list('crate'), ans))
+starttime=time()
 
-print(f'\n----STATISTICS----\n'
-      f'Max={num_guesses.max()}\n'
-      f'Min={num_guesses.min()}\n'
-      f'Avg={np.average(num_guesses)}\n'
-      f'std={np.std(num_guesses)}\n')
+for i in range(0, iterations):
+  # guesscount, win = mainLoop(list(initial), solutions[454])
+  # num_guesses=np.append(guesscount) for ans in solutions[449]
+   num_guesses=np.append(num_guesses, mainLoop(list('dealt'), solutions[454]))
+total_time=time()-starttime
+
+winpct=100*len(num_guesses.nonzero()[0])/iterations
+
+print(f'\n----STATISTICS----\n',
+      f'Ran {iterations} independent trials.\n',
+      'Win Percentage: {:4.2f}%\n'.format(winpct),
+      # f'Worked through {len(solutions)} wordle solutions\n',
+       'Process took {:4.2f} seconds\n'.format(total_time),
+      f'Max={num_guesses.max()}\n',
+      f'Min={num_guesses[num_guesses.nonzero()[0]].min()}\n',
+      f'Avg={np.average(num_guesses[num_guesses.nonzero()[0]])}\n',
+      f'std={np.std(num_guesses[num_guesses.nonzero()[0]])}\n')
